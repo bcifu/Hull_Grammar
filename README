@@ -1,0 +1,3 @@
+To generate CPP code antlr4 `-Dlanguage=Cpp HullQuery.g4`
+
+To view a test parse `antlr4-parse HullQuery.g4 query -gui < test_input`

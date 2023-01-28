@@ -1,7 +1,7 @@
 grammar HullQuery;
 query: (expr ';')* EOF; //prog is a list of epxressions
 
-expr: expr '=' expr 
+expr: decl '=' expr 
     | var 
     | func 
     | var '.' func;
@@ -10,8 +10,9 @@ func: ID '(' arglist ')' ('.' func)?;
 
 arglist: (expr (',' expr)*)?;
 
-var: type ID ('[' INT ']')? 
-    | ID;
+decl: type ID ('[' INT ']')? ;
+
+var: ID;
 
 type: ID;
 

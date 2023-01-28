@@ -1,0 +1,4 @@
+int a[50] = signal();
+int b = function();
+int c[50] = a.process();
+int d[50] = c.process2(b).finish();

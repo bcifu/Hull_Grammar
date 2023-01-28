@@ -2,3 +2,5 @@
 *.tokens
 *.interp
 .antlr/*
+*.cpp
+*.h
