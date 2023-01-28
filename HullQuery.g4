@@ -1,13 +1,17 @@
 grammar HullQuery;
 query: (expr ';')* EOF; //prog is a list of epxressions
 
-expr: expr '=' expr | var | func | var '.' func;
+expr: expr '=' expr 
+    | var 
+    | func 
+    | var '.' func;
 
 func: ID '(' arglist ')' ('.' func)?;
 
 arglist: (expr (',' expr)*)?;
 
-var: type ID ('[' INT ']')? | ID;
+var: type ID ('[' INT ']')? 
+    | ID;
 
 type: ID;
 
