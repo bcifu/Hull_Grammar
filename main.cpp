@@ -1,28 +1,24 @@
 #include <iostream>
-
+#include <fstream>
+#include <string>
 #include "antlr4-runtime.h"
 #include "HullQueryLexer.h"
 #include "HullQueryParser.h"
 
-using namespace antlrcpptest;
 using namespace antlr4;
+using namespace std;
 
-int main(int, const char **)
+int main(int argc, char *argv[])
 {
-    ANTLRInputStream input(u8"🍴 = 🍐 + \"😎\";(((x * π))) * µ + ∰; a + (x * (y ? 0 : 1) + z);");
-    TLexer lexer(&input);
-    CommonTokenStream tokens(&lexer);
+    antlr4::ANTLRInputStream input("int a[50] = signal();\nint b = function();\nint c[50] = a.process();\nint d[50] = c.process2(b).finish();");
 
-    tokens.fill();
-    for (auto token : tokens.getTokens())
-    {
-        std::cout << token->toString() << std::endl;
-    }
+    HullQueryLexer lexer(&input);
 
-    TParser parser(&tokens);
-    tree::ParseTree *tree = parser.main();
+    antlr4::CommonTokenStream tokens(&lexer);
 
-    std::cout << tree->toStringTree(&parser) << std::endl;
+    HullQueryParser parser(&tokens);
+
+    std::cout << parser.expr()->toStringTree() << std::endl;
 
     return 0;
 }
