@@ -7,22 +7,22 @@
 
 using namespace antlr4;
 using namespace std;
-using namespace HullQuery;
 
 int main(int argc, char *argv[])
 {
     if(argc == 1){
-        std::cout << "Mising input file.n\n" << std::endl;
+        std::cout << "Mising input file.n" << std::endl;
         exit(0);
     }
 
     std::ifstream inputfile;
     inputfile.open(argv[1]);
 
-    antlr4::ANTLRInputStream input(std::string("int a[50] = signal();\nint b = function();\nint c[50] = a.process();\nint d[50] = c.process2(b).finish();"));
+    //set up to read from file
+    antlr4::ANTLRInputStream input(inputfile);
 
+    //set up lexer
     HullQueryLexer lexer(&input);
-
     antlr4::CommonTokenStream tokens(&lexer);
 
     HullQueryParser parser(&tokens);

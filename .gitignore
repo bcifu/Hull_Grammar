@@ -6,3 +6,14 @@ antlr-4/*
 .DS_Store
 .vscode/
 buildfolder/*
+
+#built files
+HullQueryBaseListener.cpp
+HullQueryBaseListener.h
+HullQueryLexer.cpp
+HullQueryLexer.h
+HullQueryListener.cpp
+HullQueryListener.h
+HullQueryParser.cpp
+HullQueryParser.h
+a.out
