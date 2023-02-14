@@ -64,14 +64,16 @@ class Array {
     }
 };
 
-class Int : public InputType
+class IntT : public InputType
 {
-    Int(void) : InputType(integer, false){
+    public:
+    IntT(void) : InputType(integer, false){
     }
 };
 
 class IntArray : public InputType, public Array
 {
+    public:
     IntArray(int size) : InputType(integer_array, false), Array(size) {
     }
 };
@@ -101,69 +103,78 @@ class LValue : public Value {
     public:
     string var_name;
     RValue* definition;
-    LValue(string name, ValueType input_type, RValue* definition) : Value(leftValue){
+    InputType* type;
+    LValue(string name, InputType* type, RValue* definition) : Value(leftValue){
         var_name = name;
         this->definition = definition;
+        this->type = type;
     }
 };
 
 
-// class LeftSide {
-//     public:
-//     string variable_name;
-//     bool array;
-//     int array_size;
-//     string definition;
+class HullTreeShapeListener : public HullQueryBaseListener {
+    public:
+        list<LValue> LValList; 
 
-//     LeftSide(string definition){
-//         this->definition = definition;
-//     }
+    public: 
+    void enterExpr(HullQueryParser::ExprContext *ctx) override {
+        HullQueryParser::DeclContext* decl = ctx->decl();
 
-//     bool operator==(const LeftSide &e){
-//         return strcmp(this->definition, e->definition) == 0;
-//     }
-// };
+        if(decl == nullptr) return; //not a declaration, don't process here.
 
-// class HullTreeShapeListener : public HullQueryBaseListener {
-//     public:
-//         unordered_map<LeftSide, list<string>> varaible_map; 
+        // find right side
+        HullQueryParser::ExprContext *right = ctx->expr();
+        while (right->expr() != nullptr)
+        { // while there are more things to the right
+            right = right->expr();
+        }
+        // set right to be the variable, function, or var.func
 
-//     public: 
-//     void enterExpr(HullQueryParser::ExprContext *ctx) override {
-//         HullQueryParser::DeclContext* decl = ctx->decl();
+        string component = "";
 
-//         if(decl == nullptr) return; //not a declaration, don't process here.
+        if (right->var() != nullptr)
+        {
+            component.append(right->var()->getText());
+            component.append(".");
+        }
 
-//         //toStringTree or getText on terminal
-//         // std::cout << "Decl: " << decl->ID()->toStringTree() << std::endl;
-//         string variable_name = decl->ID()->getText();
-//         //need to handle if several variables assigned (a = b = c.func()), maybe do with other expressions, just assign the right
+        HullQueryParser::FuncContext *func = right->func();
+        while (func != nullptr)
+        { // while there are functions to work with
+            component.append(func->ID()->getText());
+            // What is the best way to handle function arguments
+            component.append(".");
+            func = func->func();
+        }
 
-//         //find right side
-//         HullQueryParser::ExprContext* right = ctx->expr();
-//         while(right->expr() != nullptr) { //while there are more things to the right
-//             right = right->expr();
-//         }
-//         //set right to be the variable, function, or var.func
+        InputType* lvtype;
+        string type = decl->type()->ID()->getText();
+        tree::TerminalNode* num = decl->INT();
+        if(num == nullptr){
+            lvtype = new IntT();
+        } else {
+            lvtype = new IntArray(stoi(decl->INT()->getText()));
+        }
 
-//         this->varaible_map[variable_name] = {};
+        RValue* def = new RValue(component);
 
-//         if(right->var() != nullptr){
-//             this->varaible_map[variable_name].push_back(right->var()->getText());
-//         }
+        LValue* left = new LValue(decl->ID()->getText(), lvtype, def);
 
-//         HullQueryParser::FuncContext* func = right->func();
-//         while(func != nullptr) { //while there are functions to work with
-//             this->varaible_map[variable_name].push_back(func->ID()->getText());
-//             //What is the best way to handle function arguments
-//             func = func->func();
-//         }
-//         // std::for_each(varaible_map[variable_name].begin(), varaible_map[variable_name].end(), [](const auto &e) {
-//         //     std::cout << e << " ";
-//         // });
-//         // std::cout << std::endl;
-//     }
-// };
+        //need to get type
+
+        // std::for_each(varaible_map[variable_name].begin(), varaible_map[variable_name].end(), [](const auto &e) {
+        //     std::cout << e << " ";
+        // });
+        // std::cout << std::endl;
+
+        //toStringTree or getText on terminal
+        // std::cout << "Decl: " << decl->ID()->toStringTree() << std::endl;
+        string variable_name = decl->ID()->getText();
+        //need to handle if several variables assigned (a = b = c.func()), maybe do with other expressions, just assign the right
+
+       
+    }
+};
 
 int main(int argc, char *argv[])
 {
@@ -187,9 +198,9 @@ int main(int argc, char *argv[])
     //std::cout << parser.expr()->toStringTree() << std::endl;
 
     tree::ParseTree *tree = parser.query();
-    // HullTreeShapeListener listener;
+    HullTreeShapeListener listener;
 
-    // tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
+    tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
 
     // for (auto iter = cbegin(listener.varaible_map); iter != cend(listener.varaible_map); ++iter){
     //     cout << iter->first << ": " << listToString(iter->second) << endl; 
