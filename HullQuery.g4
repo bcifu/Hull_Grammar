@@ -3,12 +3,13 @@ query: funcdecl*; //prog is a list of epxressions
 
 body: (expr ';')*;
 
-expr: decl '=' expr 
-    | var 
-    | func 
-    | var '.' func
-    | immediate
-	| RETURN expr;
+expr: decl '=' expr #assign
+    | var           #variable
+    | func          #function
+    | var '.' func  #varfunc
+    | immediate     #immed
+	| RETURN expr   #return
+    ;
 
 func: ID '(' arglist ')' ('.' func)?;
 

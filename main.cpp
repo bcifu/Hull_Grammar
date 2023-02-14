@@ -112,6 +112,7 @@ class LValue : public Value {
 };
 
 
+//can use parse tree maps
 class HullTreeShapeListener : public HullQueryBaseListener {
     public:
         list<LValue> LValList; 
