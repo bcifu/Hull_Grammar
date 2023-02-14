@@ -1,12 +1,14 @@
 grammar HullQuery;
-query: funcdecl; //prog is a list of epxressions
+query: funcdecl*; //prog is a list of epxressions
 
 body: (expr ';')*;
 
 expr: decl '=' expr 
     | var 
     | func 
-    | var '.' func;
+    | var '.' func
+    | immediate
+	| RETURN expr;
 
 func: ID '(' arglist ')' ('.' func)?;
 
@@ -14,9 +16,11 @@ arglist: (expr (',' expr)*)?;
 
 decl: type ID ('[' INT ']')? ;
 
-funcdecl: (type|VOID) ID '(' (paramlist|VOID) ')' '{' '}';
+funcdecl: (type|VOID) ID '(' (paramlist|VOID) ')' '{' body '}';
 
 paramlist: (type ID (',' type ID)*);
+
+immediate: INT;
 
 var: ID;
 
@@ -24,8 +28,8 @@ type: ID;
 
 fragment DIGIT: '0' ..'9';
 
+RETURN: 'return';
 VOID: 'void';
-FUNCTION: 'function';
 WS: [ \t] -> skip;
 NL: [\r\n]+ -> skip; //deal with new lines
 INT: DIGIT+;
