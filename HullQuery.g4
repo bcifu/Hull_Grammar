@@ -9,6 +9,7 @@ expr: decl '=' expr #assign
     | var '.' func  #varfunc
     | immediate     #immed
 	| RETURN expr   #return
+    | expr op expr  #oper
     ;
 
 func: ID '(' arglist ')' ('.' func)?;
@@ -26,6 +27,12 @@ immediate: INT;
 var: ID;
 
 type: ID;
+
+op: '+' #add
+    |'-' #sub
+    |'*' #mult
+    |'\\' #div
+    ;
 
 fragment DIGIT: '0' ..'9';
 

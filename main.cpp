@@ -112,7 +112,7 @@ class LValue : public Value {
 };
 
 
-//can use parse tree maps
+//can use parse tree property in the listener to retain values as I exit expressions
 class HullTreeShapeListener : public HullQueryBaseListener {
     public:
         list<LValue> LValList; 
