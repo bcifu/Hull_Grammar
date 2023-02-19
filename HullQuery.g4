@@ -8,7 +8,7 @@ expr: decl '=' expr #assign
     | func          #function
     | var '.' func  #varfunc
     | immediate     #immed
-	| RETURN expr   #return
+	| RETURN expr   #ret
     | expr op expr  #oper
     ;
 
