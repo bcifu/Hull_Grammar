@@ -29,7 +29,7 @@ enum InputTypes
 {
     integer,
     integer_array,
-    void_t
+    void_ty
 };
 
 class InputType {
@@ -81,10 +81,10 @@ class IntArray : public InputType, public Array
 
 class VoidT : public InputType {
     public:
-    VoidT(void) : InputType(void_t){
-
+    VoidT(void) : InputType(void_ty, false)
+    {
     }
-}
+};
 
 enum ValueType{leftValue, rightValue};
 
@@ -144,14 +144,15 @@ class FunctionDecl {
     int argNum; // 0 => void
     tuple<string, InputType*>* arguments; //will point ot a list
     Value** body; //list of Value* for the body of the function
-    FunctionDecl(string name, InputType *ret_type, int argNum, tuple<string, InputType *> *arguments)
+    FunctionDecl(string name, InputType *ret_type, int argNum, tuple<string, InputType *> *arguments, Value** body)
     {
         this->name = name;
-        this-> ret_type = ret_type;
+        this->ret_type = ret_type;
         this->argNum = argNum;
         this->arguments = arguments;
+        this->body = body;
     }
-}
+};
 
 
 
@@ -162,6 +163,21 @@ class HullTreeShapeListener : public HullQueryBaseListener {
         //list<Value> OpList;
         unordered_map<std::string, LValue*> var_map; //need to clear for each fucntion
         tree::ParseTreeProperty<Value*> *subexpressionvals; //need constructor
+
+    private:
+    InputType* extractDeclType(HullQueryParser::DeclContext *ctx) {
+        InputType *type;
+        if (ctx->INT() == nullptr)
+        {
+            type = new IntT();
+            // not array
+        }
+        else
+        {
+            type = new IntArray(stoi(ctx->INT()->getText()));
+        }
+        return type;
+    }
 
     public: 
     void exitOper(HullQueryParser::OperContext *ctx) override {
@@ -184,16 +200,7 @@ class HullTreeShapeListener : public HullQueryBaseListener {
     }
 
     void exitAssign(HullQueryParser::AssignContext *ctx) override { 
-        InputType* type;
-        if (ctx->decl()->INT() == nullptr)
-        {
-            type = new IntT();
-            // not array
-        }
-        else
-        {
-            type = new IntArray(stoi(ctx->decl()->INT()->getText()));
-        }
+        InputType* type = extractDeclType(ctx->decl());
 
         string name = ctx->decl()->ID()->getText();
         LValue *var = new LValue(name, type, (RValue *)subexpressionvals->get(ctx->expr()));
@@ -206,6 +213,46 @@ class HullTreeShapeListener : public HullQueryBaseListener {
         RValue* current = new RValue(variable);
         current->variable = var_map[ctx->var()->getText()];
         subexpressionvals->put(ctx, current);
+    }
+
+    InputType* getFuncDecRetType(HullQueryParser::FuncdeclretContext *ctx)  {
+        InputType* type;
+        if(ctx->VOID() != nullptr){
+            type = new VoidT();
+        } else if(ctx->INT() == nullptr){
+            type = new IntT();
+        } else {
+            type = new IntArray(stoi(ctx->INT()->getText()));
+        }
+        return type;
+    }
+
+    void exitFuncdecl(HullQueryParser::FuncdeclContext *ctx) override {
+        InputType* type = getFuncDecRetType(ctx->funcdeclret());
+
+        int argNum;
+        tuple<string, InputType *>* args;
+        if(ctx->VOID() != nullptr){ //no argument (null passed)
+            argNum = 0;
+            args = nullptr;
+        } else {
+            HullQueryParser::ParamlistContext *params = ctx->paramlist();
+            argNum = params->decl().size();
+            args = new tuple<string, InputType*>[argNum];
+            for(int i = 0; i < argNum; i++){
+                HullQueryParser::DeclContext *decl = params->decl()[i]; 
+                InputType* type = extractDeclType(decl);
+                args[i] = std::tuple<string, InputType*>(decl->ID()->getText(), type);
+            }
+        }
+
+        int bodyLength = ctx->body()->expr().size();
+        Value** body = new Value*[bodyLength];
+        for(int i = 0; i < bodyLength; i++){
+            body[i] = subexpressionvals->get(ctx->body()->expr(i));
+        }
+
+        FunctionDecl *func = new FunctionDecl(ctx->ID()->getText(), type, argNum, args, body);//FINISH BODY);
     }
 
     //THE BODY JUST HAS A VECTOR OF ALL EXPRESSIONS, EASY

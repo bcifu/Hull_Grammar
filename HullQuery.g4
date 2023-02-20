@@ -18,9 +18,11 @@ arglist: (expr (',' expr)*)?;
 
 decl: type ID ('[' INT ']')? ;
 
-funcdecl: (type|VOID) ID '(' (paramlist|VOID) ')' '{' body '}';
+funcdecl: funcdeclret ID '(' (paramlist|VOID) ')' '{' body '}';
 
-paramlist: (type ID (',' type ID)*);
+funcdeclret: (type ('[' INT ']')? | VOID);
+
+paramlist: (decl (',' decl)*);
 
 immediate: INT;
 
