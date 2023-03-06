@@ -97,9 +97,10 @@ class Value {
     }
 };
 
-enum ExprType{variable, function, varfunc, immed, oper, ret};
+enum ExprType{variable, functionE, varfunc, immed, oper, ret};
 
 class RValue;
+class FunctionDecl;
 
 class LValue : public Value
 {
@@ -120,31 +121,35 @@ class RValue : public Value
 public:
     ExprType type;
     int immedValue;
-    string funcname; //change to be pointer to function
+    FunctionDecl* func; //change to be pointer to function
+    int argCount;
+    list<RValue*> arguments;
     LValue *variable; //if referencing a variable
-    RValue *lSub;
-    RValue *rSub;
+    RValue *lSub; //if it is a funciton, this what it is called on
+    RValue *rSub; //if is a function, this is next funciton call
 
     RValue(ExprType t) : Value(rightValue)
     {
         this->type = t;
         //set up default values
         immedValue = 0;
-        funcname = "";
+        argCount = 0;
+        func = nullptr;
         lSub = nullptr;
         lSub = nullptr;
         rSub = nullptr;
     }
 };
 
-class FunctionDecl {
-    public:
+class FunctionDecl
+{
+public:
     string name;
-    InputType* ret_type;
-    int argNum; // 0 => void
-    tuple<string, InputType*>* arguments; //will point ot a list
-    Value** body; //list of Value* for the body of the function
-    FunctionDecl(string name, InputType *ret_type, int argNum, tuple<string, InputType *> *arguments, Value** body)
+    InputType *ret_type;
+    int argNum;                            // 0 => void
+    tuple<string, InputType *> *arguments; // will point ot a list
+    Value **body;                          // list of Value* for the body of the function
+    FunctionDecl(string name, InputType *ret_type, int argNum, tuple<string, InputType *> *arguments, Value **body)
     {
         this->name = name;
         this->ret_type = ret_type;
@@ -154,13 +159,11 @@ class FunctionDecl {
     }
 };
 
-
-
 //can use parse tree property in the listener to retain values as I exit expressions
 //could maybe assign LValList to each function???
 class HullTreeShapeListener : public HullQueryBaseListener {
     public:
-        //list<Value> OpList;
+        unordered_map<std::string, FunctionDecl*> func_map;
         unordered_map<std::string, LValue*> var_map; //need to clear for each fucntion
         tree::ParseTreeProperty<Value*> *subexpressionvals; //need constructor
 
@@ -210,8 +213,35 @@ class HullTreeShapeListener : public HullQueryBaseListener {
 
     //if this throws an error it is because the variable has not been mapped
     void exitVariable(HullQueryParser::VariableContext *ctx) override {
-        RValue* current = new RValue(variable);
+        RValue *current = new RValue(variable);
         current->variable = var_map[ctx->var()->getText()];
+        subexpressionvals->put(ctx, current);
+    }
+
+    void exitFunc(HullQueryParser::FuncContext *ctx) override {
+        RValue *current = new RValue(functionE);
+        current->func = func_map[ctx->ID()->getText()];
+        current->argCount = ctx->arglist()->expr().size();
+        for(HullQueryParser::ExprContext *ectx : ctx->arglist()->expr()){
+            current->arguments.push_back((RValue *) subexpressionvals->get(ectx));
+        }
+
+        if(ctx->func() != nullptr){
+            current->rSub = (RValue *) subexpressionvals->get(ctx->func());
+        }
+
+        subexpressionvals->put(ctx, current);
+    }
+
+    void exitFunction(HullQueryParser::FunctionContext *ctx) override {
+        subexpressionvals->put(ctx, subexpressionvals->get(ctx->func()));
+    }
+
+    void exitVarfunc(HullQueryParser::VarfuncContext *ctx) override {
+        RValue *current = (RValue *) subexpressionvals->get(ctx->func());
+        RValue *lvar = new RValue(variable);
+        lvar->variable = var_map[ctx->var()->getText()];
+        current->lSub = lvar;
         subexpressionvals->put(ctx, current);
     }
 
@@ -252,71 +282,11 @@ class HullTreeShapeListener : public HullQueryBaseListener {
             body[i] = subexpressionvals->get(ctx->body()->expr(i));
         }
 
-        FunctionDecl *func = new FunctionDecl(ctx->ID()->getText(), type, argNum, args, body);//FINISH BODY);
+        var_map.clear(); //clear variables for next function.
+
+        FunctionDecl *func = new FunctionDecl(ctx->ID()->getText(), type, argNum, args, body);
+        func_map[ctx->ID()->getText()] = func;
     }
-
-    //THE BODY JUST HAS A VECTOR OF ALL EXPRESSIONS, EASY
-    // void exitBody(HullQueryParser::BodyContext *ctxt) override {
-    //     OpList.push_back(subexpressionvals->get(ctx->expr()));
-    // }
-
-    // void enterExpr(HullQueryParser::ExprContext *ctx) override {
-    //     HullQueryParser::DeclContext* decl = ctx->decl();
-
-    //     if(decl == nullptr) return; //not a declaration, don't process here.
-
-    //     // find right side
-    //     HullQueryParser::ExprContext *right = ctx->expr();
-    //     while (right->expr() != nullptr)
-    //     { // while there are more things to the right
-    //         right = right->expr();
-    //     }
-    //     // set right to be the variable, function, or var.func
-
-    //     string component = "";
-
-    //     if (right->var() != nullptr)
-    //     {
-    //         component.append(right->var()->getText());
-    //         component.append(".");
-    //     }
-
-    //     HullQueryParser::FuncContext *func = right->func();
-    //     while (func != nullptr)
-    //     { // while there are functions to work with
-    //         component.append(func->ID()->getText());
-    //         // What is the best way to handle function arguments
-    //         component.append(".");
-    //         func = func->func();
-    //     }
-
-    //     InputType* lvtype;
-    //     string type = decl->type()->ID()->getText();
-    //     tree::TerminalNode* num = decl->INT();
-    //     if(num == nullptr){
-    //         lvtype = new IntT();
-    //     } else {
-    //         lvtype = new IntArray(stoi(decl->INT()->getText()));
-    //     }
-
-    //     RValue* def = new RValue(component);
-
-    //     LValue* left = new LValue(decl->ID()->getText(), lvtype, def);
-
-    //     //need to get type
-
-    //     // std::for_each(varaible_map[variable_name].begin(), varaible_map[variable_name].end(), [](const auto &e) {
-    //     //     std::cout << e << " ";
-    //     // });
-    //     // std::cout << std::endl;
-
-    //     //toStringTree or getText on terminal
-    //     // std::cout << "Decl: " << decl->ID()->toStringTree() << std::endl;
-    //     string variable_name = decl->ID()->getText();
-    //     //need to handle if several variables assigned (a = b = c.func()), maybe do with other expressions, just assign the right
-
-       
-    // }
 };
 
 int main(int argc, char *argv[])

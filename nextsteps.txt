@@ -1,0 +1,50 @@
+Make sure correct print out/parse tree
+
+Device configuration file, device characteristics
+Number channels, number devices (look at paper)
+For each function used in expression, definition in yaml file
+
+Declare devices then instantiate specefic numbers
+PE with function declaration, like same type
+
+multiple radios for each device
+
+Dev {
+    PE {
+        base frequency (khz)
+        Power characteristics (leakage, dynamic power) (split for memory and compute)
+        max channels: ____
+        outputrate: _______ (float)
+    }
+    Radio {
+        Same as PE, just not dynamic
+        power, output rate
+    }
+}
+
+Read in config file, take expression and multiply by total devices
+
+Need language specified variable for each device (for all channels across all devices)
+Need channel_data[#channels][samples per window] -> expected at top of program file
+Each device has that same number of channels
+
+Functions grouped
+
+Number of channels * number of devices
+
+Give programmer access to devices
+Some language specification that lets you access devices, default variable that always exists
+
+Give config file, then compile can access stuff
+
+Programmer gets number of channels per device, number of devices
+
+Need channel data for programmer
+
+Assumes same channels per device
+
+Remove samples per window
+
+channel_data[#channels][#devices]
+
+All functions can be called with channel_data as paramter
