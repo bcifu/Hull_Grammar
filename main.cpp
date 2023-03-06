@@ -50,6 +50,9 @@ protected:
     bool getType(void){
         return t_type;
     }
+
+    public:
+    friend std::ostream &operator<<(std::ostream &s, const InputType &it);
 };
 
 class Array {
@@ -147,14 +150,18 @@ public:
     string name;
     InputType *ret_type;
     int argNum;                            // 0 => void
-    tuple<string, InputType *> *arguments; // will point ot a list
+    string* argNames;
+    InputType** argTypes;
     Value **body;                          // list of Value* for the body of the function
-    FunctionDecl(string name, InputType *ret_type, int argNum, tuple<string, InputType *> *arguments, Value **body)
+    friend std::ostream &operator<<(std::ostream &s, const FunctionDecl &fdecl);
+
+    FunctionDecl(string name, InputType *ret_type, int argNum, string* argNames, InputType** argTypes, Value **body)
     {
         this->name = name;
         this->ret_type = ret_type;
         this->argNum = argNum;
-        this->arguments = arguments;
+        this->argNames = argNames;
+        this->argTypes = argTypes;
         this->body = body;
     }
 };
@@ -166,6 +173,7 @@ class HullTreeShapeListener : public HullQueryBaseListener {
         unordered_map<std::string, FunctionDecl*> func_map;
         unordered_map<std::string, LValue*> var_map; //need to clear for each fucntion
         tree::ParseTreeProperty<Value*> *subexpressionvals; //need constructor
+        list<FunctionDecl*> func_def_order_list;
 
     private:
     InputType* extractDeclType(HullQueryParser::DeclContext *ctx) {
@@ -182,8 +190,11 @@ class HullTreeShapeListener : public HullQueryBaseListener {
         return type;
     }
 
-    public: 
-    void exitOper(HullQueryParser::OperContext *ctx) override {
+    public:
+        friend std::ostream &operator<<(std::ostream &s, const HullTreeShapeListener &listener);
+
+    void exitOper(HullQueryParser::OperContext *ctx) override
+    {
         RValue* current = new RValue(oper);
         current->lSub = (RValue *) subexpressionvals->get(ctx->expr(0));
         current->rSub = (RValue *) subexpressionvals->get(ctx->expr(1));
@@ -261,18 +272,22 @@ class HullTreeShapeListener : public HullQueryBaseListener {
         InputType* type = getFuncDecRetType(ctx->funcdeclret());
 
         int argNum;
-        tuple<string, InputType *>* args;
+        string *argNames;
+        InputType **argTypes;
         if(ctx->VOID() != nullptr){ //no argument (null passed)
             argNum = 0;
-            args = nullptr;
+            argNames = nullptr;
+            argTypes = nullptr;
         } else {
             HullQueryParser::ParamlistContext *params = ctx->paramlist();
             argNum = params->decl().size();
-            args = new tuple<string, InputType*>[argNum];
+            argNames = new string[argNum];
+            argTypes = new InputType*[argNum];
             for(int i = 0; i < argNum; i++){
                 HullQueryParser::DeclContext *decl = params->decl()[i]; 
                 InputType* type = extractDeclType(decl);
-                args[i] = std::tuple<string, InputType*>(decl->ID()->getText(), type);
+                argNames[i] = decl->ID()->getText();
+                argTypes[i] = type;
             }
         }
 
@@ -284,10 +299,36 @@ class HullTreeShapeListener : public HullQueryBaseListener {
 
         var_map.clear(); //clear variables for next function.
 
-        FunctionDecl *func = new FunctionDecl(ctx->ID()->getText(), type, argNum, args, body);
+        FunctionDecl *func = new FunctionDecl(ctx->ID()->getText(), type, argNum, argNames, argTypes, body);
         func_map[ctx->ID()->getText()] = func;
+        func_def_order_list.push_back(func);
     }
 };
+
+std::ostream &operator<<(std::ostream &s, const HullTreeShapeListener &listener){
+    for (FunctionDecl* fdecl : listener.func_def_order_list){
+        s << &fdecl << endl;
+    }
+    return s;
+}
+
+std::ostream &operator<<(std::ostream &s, const FunctionDecl &fdecl){
+    s << "Function: " << fdecl.name << &(fdecl.ret_type) << "Arguments: " << endl;
+    // for (<tuple<string, InputType *> d : fdecl.arguments)
+    // {
+    //     s << get<1>(d) << " " << get<0>(d);
+    //     argument++;
+    // }
+    // s << endl;
+    //pritn values
+    return s;
+}
+
+std::ostream &operator<<(std::ostream &s, const InputType &it){
+    const string nameTT[] = {"integer", "integer_array", "void"};
+    s << (nameTT[it.t_type]);
+    return s;
+}
 
 int main(int argc, char *argv[])
 {
@@ -315,9 +356,7 @@ int main(int argc, char *argv[])
 
     tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
 
-    // for (auto iter = cbegin(listener.varaible_map); iter != cend(listener.varaible_map); ++iter){
-    //     cout << iter->first << ": " << listToString(iter->second) << endl; 
-    // }
+
 
     return 0;
 }

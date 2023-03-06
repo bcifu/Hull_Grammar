@@ -17,3 +17,4 @@ HullQueryListener.h
 HullQueryParser.cpp
 HullQueryParser.h
 a.out
+vgcore.*
