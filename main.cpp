@@ -172,7 +172,7 @@ class HullTreeShapeListener : public HullQueryBaseListener {
     public:
         unordered_map<std::string, FunctionDecl*> func_map;
         unordered_map<std::string, LValue*> var_map; //need to clear for each fucntion
-        tree::ParseTreeProperty<Value*> *subexpressionvals; //need constructor
+        tree::ParseTreeProperty<Value*> *subexpressionvals = new tree::ParseTreeProperty<Value*>; //need constructor
         list<FunctionDecl*> func_def_order_list;
 
     private:
@@ -307,12 +307,12 @@ class HullTreeShapeListener : public HullQueryBaseListener {
 
 std::ostream &operator<<(std::ostream &s, const HullTreeShapeListener &listener){
     for (FunctionDecl* fdecl : listener.func_def_order_list){
-        s << &fdecl << endl;
+        s << (*fdecl) << endl;
     }
     return s;
 }
 
-std::ostream &operator<<(std::ostream &s, const FunctionDecl &fdecl){
+std::ostream &operator<<(std::ostream &s, const FunctionDecl &fdecl){    
     s << "Function: " << fdecl.name << &(fdecl.ret_type) << "Arguments: " << endl;
     // for (<tuple<string, InputType *> d : fdecl.arguments)
     // {
@@ -356,7 +356,7 @@ int main(int argc, char *argv[])
 
     tree::ParseTreeWalker::DEFAULT.walk(&listener, tree);
 
-
+    std::cout << listener << std::endl;
 
     return 0;
 }
