@@ -45,7 +45,9 @@ public:
 
     void exitFuncdecl(HullQueryParser::FuncdeclContext *ctx) override;
 
-    HullTreeShapeListener(void) {
+    void exitLambda(HullQueryParser::LambdaContext *ctx) override;
+
+    HullTreeShapeListener(void){
 
     };
 };

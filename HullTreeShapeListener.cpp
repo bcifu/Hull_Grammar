@@ -65,7 +65,7 @@ void HullTreeShapeListener::exitFunc(HullQueryParser::FuncContext *ctx)
 {
     RValue *current = new RValue(functionE);
     current->func = func_map[ctx->ID()->getText()];
-    current->funcName = ctx->ID()->getText();
+    current->argName = ctx->ID()->getText();
     current->argCount = ctx->arglist()->expr().size();
     for (HullQueryParser::ExprContext *ectx : ctx->arglist()->expr())
     {
@@ -79,6 +79,13 @@ void HullTreeShapeListener::exitFunc(HullQueryParser::FuncContext *ctx)
         current->rSub = nullptr;
     }
 
+    subexpressionvals->put(ctx, current);
+}
+
+void HullTreeShapeListener::exitLambda(HullQueryParser::LambdaContext *ctx){
+    RValue *current = new RValue(lambda);
+    current->argName = ctx->var()->getText();
+    current->rSub = (RValue *) subexpressionvals->get(ctx->expr());
     subexpressionvals->put(ctx, current);
 }
 

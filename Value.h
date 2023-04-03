@@ -37,7 +37,8 @@ enum ExprType
     varfunc,
     immed,
     oper,
-    ret
+    ret,
+    lambda
 };
 
 class RValue;
@@ -64,7 +65,7 @@ public:
     LValue *variable; // if referencing a variable
     RValue *lSub;     // if it is a funciton, this what it is called on
     RValue *rSub;     // if is a function, this is next funciton call
-    string funcName;
+    string argName;
 
     RValue(ExprType t);
     string toString(void);

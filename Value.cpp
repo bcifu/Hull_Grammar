@@ -41,12 +41,12 @@ string RValue::toString(void)
         case functionE:
             
             for(RValue *val : this->arguments){
-                args += val->toString() + " ";
+                args += val->toString() + ", ";
             }
             if(this->rSub != nullptr){
-                return this->funcName + "(" + args + ")." + this->rSub->toString();
+                return this->argName + "(" + args + ")." + this->rSub->toString();
             } else {
-                return this->funcName + "(" + args + ")";
+                return this->argName + "(" + args + ")";
             }
             break;
         case immed:
@@ -58,6 +58,8 @@ string RValue::toString(void)
         case ret:
             return "Return " + this->rSub->toString();
             break;   
+        case lambda:
+            return "Lambda on " + this->argName + ": " + this->rSub->toString();
         default:
             return "";      
     }

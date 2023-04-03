@@ -1,5 +1,6 @@
 int userfunc(int a){
     int c = 12;
+    int d = c.func(lambda c => (c.f()));
     return c;
 }
 

@@ -3,7 +3,8 @@ query: funcdecl*; //prog is a list of epxressions
 
 body: (expr ';')*;
 
-expr: decl '=' expr #assign
+expr: LAMBDA var '=>' '(' expr ')' #lambda
+    | decl '=' expr #assign
     | var           #variable
     | func          #function
     | var '.' func  #varfunc
@@ -34,10 +35,12 @@ op: '+' #add
     |'-' #sub
     |'*' #mult
     |'\\' #div
+    | '==' #eq
     ;
 
 fragment DIGIT: '0' ..'9';
 
+LAMBDA: 'lambda';
 RETURN: 'return';
 VOID: 'void';
 WS: [ \t] -> skip;
