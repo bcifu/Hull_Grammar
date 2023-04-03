@@ -5,93 +5,11 @@
 #include "HullQueryLexer.h"
 #include "HullQueryParser.h"
 #include "HullQueryBaseListener.h"
+#include "InputTypes.h"
+// using namespace InputTypes;
 
 using namespace antlr4;
 using namespace std;
-
-string listToString(list<string> lst){
-    string result;
-    for(const auto& s : lst){
-        result += s;
-        result += " ";
-    }
-    return result;
-}
-
-/* Types
- Enum that handles what the valid types are
- A general type class that stores if something is an array or not, and the types.
- An array subtype that should also be inherited from for arrays
- And the instantion of types
-*/
-
-enum InputTypes
-{
-    integer,
-    integer_array,
-    void_ty
-};
-
-class InputType {
-protected:
-    InputTypes t_type;
-    bool is_array;
-
-    InputType(InputTypes t, bool ar){
-        t_type = t;
-        is_array = ar;
-    }
-
-    bool isArray(void)
-    {
-        return is_array;
-    }
-
-    bool getType(void){
-        return t_type;
-    }
-
-    public:
-    string toString(void) {
-        const string nameTT[] = {"integer", "integer_array", "void"};
-        return (nameTT[this->t_type]);
-    }
-    friend std::ostream &operator<<(std::ostream &s, const InputType &it);
-};
-
-class Array {
-    protected:
-    int size;
-
-    Array(int size){
-        this->size = size;
-    }
-
-    int get_size(void){
-        return size;
-    }
-};
-
-class IntT : public InputType
-{
-    public:
-    IntT(void) : InputType(integer, false){
-    }
-};
-
-class IntArray : public InputType, public Array
-{
-    public:
-    IntArray(int size) : InputType(integer_array, false), Array(size) {
-    }
-};
-
-class VoidT : public InputType {
-    public:
-    VoidT(void) : InputType(void_ty, false)
-    {
-    }
-};
 
 enum ValueType{leftValue, rightValue};
 
