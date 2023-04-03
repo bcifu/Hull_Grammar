@@ -15,7 +15,7 @@ LValue::LValue(string name, InputType *type, RValue *definition) : Value(leftVal
 
 string LValue::toString(void)
 {
-    return var_name + " of " + type->toString() + " = ";
+    return var_name + " of " + type->toString() + " = " + definition->toString();
 }
 
 RValue::RValue(ExprType t) : Value(rightValue)
@@ -32,7 +32,35 @@ RValue::RValue(ExprType t) : Value(rightValue)
 
 string RValue::toString(void)
 {
-    return "rval";
+    string args;
+    ExprType typ = this->type;
+    switch(typ){
+        case ExprType::variable:
+            return this->variable->var_name + ": " + this->variable->toString();
+            break;
+        case functionE:
+            
+            for(RValue *val : this->arguments){
+                args += val->toString() + " ";
+            }
+            if(this->rSub != nullptr){
+                return this->funcName + "(" + args + ")." + this->rSub->toString();
+            } else {
+                return this->funcName + "(" + args + ")";
+            }
+            break;
+        case immed:
+            return to_string(this->immedValue);
+            break;
+        case oper:
+            return "(" + this->lSub->toString() + ") oper (" + this->rSub->toString() + ")";
+            break;
+        case ret:
+            return "Return " + this->rSub->toString();
+            break;   
+        default:
+            return "";      
+    }
 }
 
 FunctionDecl::FunctionDecl(string name, InputType *ret_type, int argNum, string *argNames, InputType **argTypes, Value **body, int bodyLength)
