@@ -6,103 +6,10 @@
 #include "HullQueryParser.h"
 #include "HullQueryBaseListener.h"
 #include "InputTypes.h"
-// using namespace InputTypes;
+#include "Value.h"
 
 using namespace antlr4;
 using namespace std;
-
-enum ValueType{leftValue, rightValue};
-
-class Value {
-    public:
-    ValueType type;
-
-    Value(ValueType type){
-        this->type = type;
-    }
-
-    virtual string toString(void){
-        return "";
-    }
-};
-
-enum ExprType{variable, functionE, varfunc, immed, oper, ret};
-
-class RValue;
-class FunctionDecl;
-
-class LValue : public Value
-{
-public:
-    string var_name;
-    RValue *definition;
-    InputType *type;
-    LValue(string name, InputType *type, RValue *definition) : Value(leftValue)
-    {
-        var_name = name;
-        this->definition = definition;
-        this->type = type;
-    }
-
-    virtual string toString(void)
-    {
-        return var_name + " of " + type->toString() + " = ";
-    }
-};
-
-class RValue : public Value
-{
-public:
-    ExprType type;
-    int immedValue;
-    FunctionDecl* func; //change to be pointer to function
-    int argCount;
-    list<RValue*> arguments;
-    LValue *variable; //if referencing a variable
-    RValue *lSub; //if it is a funciton, this what it is called on
-    RValue *rSub; //if is a function, this is next funciton call
-
-    RValue(ExprType t) : Value(rightValue)
-    {
-        this->type = t;
-        //set up default values
-        immedValue = 0;
-        argCount = 0;
-        func = nullptr;
-        lSub = nullptr;
-        lSub = nullptr;
-        rSub = nullptr;
-    }
-
-    virtual string toString(void)
-    {
-        return "rval";
-    }
-};
-
-class FunctionDecl
-{
-public:
-    string name;
-    InputType *ret_type;
-    int argNum;                            // 0 => void
-    string* argNames;
-    InputType** argTypes;
-    Value **body;                          // list of Value* for the body of the function
-    int bodyLength;
-    friend std::ostream &operator<<(std::ostream &s, const FunctionDecl &fdecl);
-
-    FunctionDecl(string name, InputType *ret_type, int argNum, string* argNames, InputType** argTypes, Value **body, int bodyLength)
-    {
-        this->name = name;
-        this->ret_type = ret_type;
-        this->argNum = argNum;
-        this->argNames = argNames;
-        this->argTypes = argTypes;
-        this->body = body;
-        this->bodyLength = bodyLength;
-    }
-};
 
 //can use parse tree property in the listener to retain values as I exit expressions
 //could maybe assign LValList to each function???
@@ -250,19 +157,7 @@ std::ostream &operator<<(std::ostream &s, const HullTreeShapeListener &listener)
     return s;
 }
 
-std::ostream &operator<<(std::ostream &s, const FunctionDecl &fdecl){    
-    s << "Function: " << fdecl.name << " "<< fdecl.ret_type->toString() << " Arguments: " << endl;
-    for (int i = 0; i < fdecl.argNum; i++)
-    {
-        s << fdecl.argNames[i] << ": " << fdecl.argTypes[i]->toString() << endl;
-    }
-    s << endl;
-    for (int i = 0; i < fdecl.bodyLength; i++){
-        s << fdecl.body[i]->toString() << endl;;
-    }
-    s << endl;
-    return s;
-}
+
 
 int main(int argc, char *argv[])
 {

@@ -1,4 +1,8 @@
+#ifndef INPUTTYPESHEADER
+#define INPUTTYPESHEADER
+
 #include <string>
+#include "InputTypes.h"
 
 enum InputTypes
 {
@@ -73,3 +77,5 @@ public:
     {
     }
 };
+
+#endif
