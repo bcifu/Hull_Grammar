@@ -1,4 +1,4 @@
-int userfunc(void){
+int userfunc(int a){
     int c = 12;
     return c;
 }

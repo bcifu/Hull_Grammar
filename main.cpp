@@ -52,6 +52,10 @@ protected:
     }
 
     public:
+    string toString(void) {
+        const string nameTT[] = {"integer", "integer_array", "void"};
+        return (nameTT[this->t_type]);
+    }
     friend std::ostream &operator<<(std::ostream &s, const InputType &it);
 };
 
@@ -98,6 +102,10 @@ class Value {
     Value(ValueType type){
         this->type = type;
     }
+
+    virtual string toString(void){
+        return "";
+    }
 };
 
 enum ExprType{variable, functionE, varfunc, immed, oper, ret};
@@ -116,6 +124,11 @@ public:
         var_name = name;
         this->definition = definition;
         this->type = type;
+    }
+
+    virtual string toString(void)
+    {
+        return var_name + " of " + type->toString() + " = ";
     }
 };
 
@@ -142,6 +155,11 @@ public:
         lSub = nullptr;
         rSub = nullptr;
     }
+
+    virtual string toString(void)
+    {
+        return "rval";
+    }
 };
 
 class FunctionDecl
@@ -153,9 +171,10 @@ public:
     string* argNames;
     InputType** argTypes;
     Value **body;                          // list of Value* for the body of the function
+    int bodyLength;
     friend std::ostream &operator<<(std::ostream &s, const FunctionDecl &fdecl);
 
-    FunctionDecl(string name, InputType *ret_type, int argNum, string* argNames, InputType** argTypes, Value **body)
+    FunctionDecl(string name, InputType *ret_type, int argNum, string* argNames, InputType** argTypes, Value **body, int bodyLength)
     {
         this->name = name;
         this->ret_type = ret_type;
@@ -163,6 +182,7 @@ public:
         this->argNames = argNames;
         this->argTypes = argTypes;
         this->body = body;
+        this->bodyLength = bodyLength;
     }
 };
 
@@ -299,7 +319,7 @@ class HullTreeShapeListener : public HullQueryBaseListener {
 
         var_map.clear(); //clear variables for next function.
 
-        FunctionDecl *func = new FunctionDecl(ctx->ID()->getText(), type, argNum, argNames, argTypes, body);
+        FunctionDecl *func = new FunctionDecl(ctx->ID()->getText(), type, argNum, argNames, argTypes, body, bodyLength);
         func_map[ctx->ID()->getText()] = func;
         func_def_order_list.push_back(func);
     }
@@ -307,26 +327,22 @@ class HullTreeShapeListener : public HullQueryBaseListener {
 
 std::ostream &operator<<(std::ostream &s, const HullTreeShapeListener &listener){
     for (FunctionDecl* fdecl : listener.func_def_order_list){
-        s << (*fdecl) << endl;
+        s << (*fdecl);
     }
     return s;
 }
 
 std::ostream &operator<<(std::ostream &s, const FunctionDecl &fdecl){    
-    s << "Function: " << fdecl.name << &(fdecl.ret_type) << "Arguments: " << endl;
-    // for (<tuple<string, InputType *> d : fdecl.arguments)
-    // {
-    //     s << get<1>(d) << " " << get<0>(d);
-    //     argument++;
-    // }
-    // s << endl;
-    //pritn values
-    return s;
-}
-
-std::ostream &operator<<(std::ostream &s, const InputType &it){
-    const string nameTT[] = {"integer", "integer_array", "void"};
-    s << (nameTT[it.t_type]);
+    s << "Function: " << fdecl.name << " "<< fdecl.ret_type->toString() << " Arguments: " << endl;
+    for (int i = 0; i < fdecl.argNum; i++)
+    {
+        s << fdecl.argNames[i] << ": " << fdecl.argTypes[i]->toString() << endl;
+    }
+    s << endl;
+    for (int i = 0; i < fdecl.bodyLength; i++){
+        s << fdecl.body[i]->toString() << endl;;
+    }
+    s << endl;
     return s;
 }
 
